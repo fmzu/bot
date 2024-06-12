@@ -18,6 +18,22 @@ client.on(Events.ClientReady, (c) => {
 
 client.on(Events.MessageCreate, onCreateMessage)
 
+const mentionText = "<process.env.BOT_ID>"
+
 async function onCreateMessage(message: Message<boolean>) {
-  console.log(message)
+  // 自分へのメンションかどうか
+  const isMention = message.content.includes(mentionText)
+
+// 自分へのメンションでない場合は無視する
+if (!isMention) return
+
+/**
+ * メッセージの内容
+ */
+const text = message.content.replace(mentionText, "").trim()
+
+const responseText = `<@${message.author.id}>`
+
+// 応答
+await message.channel.send(`${responseText} ${text}`)
 }
