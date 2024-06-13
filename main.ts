@@ -1,5 +1,30 @@
 import { Client, Events, GatewayIntentBits, type Message } from "discord.js"
-import OpenAI from "openai"
+
+class VoteManager {
+  private currentVote: {
+    options: string[]
+    votes: Record<string, string>
+  } | null = null
+
+  startVote(options: string[]) {
+    this.currentVote = {
+      options: options,
+      votes: {},
+    }
+  }
+
+  vote(userId: string, option: string) {
+    if (this.currentVote?.options.includes(option)) {
+      this.currentVote.votes[userId] = option
+      return true
+    }
+    return false
+  }
+
+  getCurrentVote() {
+    return this.currentVote
+  }
+}
 
 const client = new Client({
   intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages],
@@ -17,13 +42,15 @@ client.on(Events.ClientReady, (c) => {
   console.log(`Ready! Logged in as ${c.user.tag}`)
 })
 
+const voteManager = new VoteManager()
+
 client.on(Events.MessageCreate, onCreateMessage)
 
 const mentionText = process.env.BOT_ID
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-})
+// const openai = new OpenAI({
+//   apiKey: process.env.OPENAI_API_TOKEN,
+// })
 
 async function onCreateMessage(message: Message<boolean>) {
   // 自分へのメンションかどうか
@@ -39,20 +66,41 @@ async function onCreateMessage(message: Message<boolean>) {
 
   const responseText = `<@${message.author.id}>`
 
-  const response = await openai.chat.completions.create({
-    model: "gpt-4o",
-    stream: false,
-    messages: [
-      {
-        role: "system",
-        content: text,
-      },
-    ],
-  })
-  console.log("message", response)
+  if (text.startsWith("!startvote")) {
+    const options = text.split(" ").slice(1)
+    let voteMessageText = "投票を開始します。選択肢は以下の通りです。\n"
 
-  // 応答
-  await message.channel.send(
-    `${responseText} ${response.choices[0].message.content}`,
-  )
+    for (let i = 0; i < options.length; i++) {
+      voteMessageText += `${i + 1} : ${options[i]}\n`
+    }
+
+    voteManager.startVote(options)
+    await message.channel.send(voteMessageText)
+  } else if (text.startsWith("!vote")) {
+    const option = text.split(" ")[1]
+    if (voteManager.vote(message.author.id, option)) {
+      await message.channel.send(`あなたの投票を受け付けました: ${option}`)
+    } else {
+      await message.channel.send(`無効な選択肢です: ${option}`)
+    }
+  }
+
+  // else {
+  //   const response = await openai.chat.completions.create({
+  //     model: "gpt-4o",
+  //     stream: false,
+  //     messages: [
+  //       {
+  //         role: "system",
+  //         content: text,
+  //       },
+  //     ],
+  //   })
+  //   console.log("message", response)
+
+  // // 応答
+  // await message.channel.send(
+  //   `${responseText} ${response.choices[0].message.content}`,
+  // )
+  // }
 }
