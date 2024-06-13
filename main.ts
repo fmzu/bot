@@ -1,4 +1,5 @@
 import { Client, Events, GatewayIntentBits, type Message } from "discord.js"
+import OpenAI from "openai"
 
 const client = new Client({
   intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages],
@@ -20,20 +21,38 @@ client.on(Events.MessageCreate, onCreateMessage)
 
 const mentionText = process.env.BOT_ID
 
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY,
+})
+
 async function onCreateMessage(message: Message<boolean>) {
   // 自分へのメンションかどうか
-  const isMention = message.content.includes(mentionText??"")
+  const isMention = message.content.includes(mentionText ?? "")
 
-// 自分へのメンションでない場合は無視する
-if (!isMention) return
+  // 自分へのメンションでない場合は無視する
+  if (!isMention) return
 
-/**
- * メッセージの内容
- */
-const text = message.content.replace(mentionText??"", "").trim()
+  /**
+   * メッセージの内容
+   */
+  const text = message.content.replace(mentionText ?? "", "").trim()
 
-const responseText = `<@${message.author.id}>`
+  const responseText = `<@${message.author.id}>`
 
-// 応答
-await message.channel.send(`${responseText} ${text}`)
+  const response = await openai.chat.completions.create({
+    model: "gpt-4o",
+    stream: false,
+    messages: [
+      {
+        role: "system",
+        content: text,
+      },
+    ],
+  })
+  console.log("message", response)
+
+  // 応答
+  await message.channel.send(
+    `${responseText} ${response.choices[0].message.content}`,
+  )
 }
