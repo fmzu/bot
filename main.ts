@@ -1,4 +1,12 @@
-import { Client, Events, GatewayIntentBits, type Message } from "discord.js"
+import {
+  ActionRowBuilder,
+  Client,
+  Events,
+  GatewayIntentBits,
+  StringSelectMenuBuilder,
+  StringSelectMenuOptionBuilder,
+  type Message,
+} from "discord.js"
 
 class VoteManager {
   private currentVote: {
@@ -25,6 +33,16 @@ class VoteManager {
     return this.currentVote
   }
 }
+
+const select = new StringSelectMenuBuilder()
+  .setCustomId("starter")
+  .setPlaceholder("何か一つ選んでください")
+  .addOptions(
+    new StringSelectMenuOptionBuilder()
+      .setLabel("Bulbasaur")
+      .setDescription("The dual-type Grass/Poison Seed Pokémon.")
+      .setValue("bulbasaur"),
+  )
 
 const client = new Client({
   intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages],
@@ -66,16 +84,45 @@ async function onCreateMessage(message: Message<boolean>) {
 
   const responseText = `<@${message.author.id}>`
 
-  if (text.startsWith("!startvote")) {
-    const options = text.split(" ").slice(1)
-    let voteMessageText = "投票を開始します。選択肢は以下の通りです。\n"
+  // const select = new StringSelectMenuBuilder()
+  //   .setCustomId("starter")
+  //   .setPlaceholder("Make a selection!")
+  //   .addOptions(
+  //     new StringSelectMenuOptionBuilder()
+  //       .setLabel("")
+  //       .setDescription("")
+  //       .setValue(""),
+  //   )
 
-    for (let i = 0; i < options.length; i++) {
-      voteMessageText += `${i + 1} : ${options[i]}\n`
-    }
+  if (text.startsWith("!startvote")) {
+    const options = text.split(" ").slice(1) // コマンドの後のテキストを選択肢として分割
+    const select = new StringSelectMenuBuilder()
+      .setCustomId("starter")
+      .setPlaceholder("何か一つ選んでください")
+
+    // 選択肢を追加
+    const selectResult = select.addOptions(
+      options.map((option, index) =>
+        new StringSelectMenuOptionBuilder()
+          .setLabel(option)
+          .setDescription(`Option ${index + 1}`)
+          .setValue(option),
+      ),
+    )
+
+    // ActionRowBuilder を使用してメニューをメッセージに追加
+    const row = new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(
+      selectResult,
+    )
+
+    // 投票メッセージのテキストを構築
+    let voteMessageText = `${responseText} 投票を開始します。以下の選択肢から一つ選んでください。\n`
+    options.forEach((option, index) => {
+      voteMessageText += `${index + 1}: ${option}\n`
+    })
 
     voteManager.startVote(options)
-    await message.channel.send(voteMessageText)
+    await message.channel.send({ content: voteMessageText, components: [row] })
   } else if (text.startsWith("!vote")) {
     const option = text.split(" ")[1]
     if (voteManager.vote(message.author.id, option)) {
@@ -84,23 +131,23 @@ async function onCreateMessage(message: Message<boolean>) {
       await message.channel.send(`無効な選択肢です: ${option}`)
     }
   }
-
-  // else {
-  //   const response = await openai.chat.completions.create({
-  //     model: "gpt-4o",
-  //     stream: false,
-  //     messages: [
-  //       {
-  //         role: "system",
-  //         content: text,
-  //       },
-  //     ],
-  //   })
-  //   console.log("message", response)
-
-  // // 応答
-  // await message.channel.send(
-  //   `${responseText} ${response.choices[0].message.content}`,
-  // )
-  // }
 }
+
+// else {
+//   const response = await openai.chat.completions.create({
+//     model: "gpt-4o",
+//     stream: false,
+//     messages: [
+//       {
+//         role: "system",
+//         content: text,
+//       },
+//     ],
+//   })
+//   console.log("message", response)
+
+// // 応答
+// await message.channel.send(
+//   `${responseText} ${response.choices[0].message.content}`,
+// )
+// }
