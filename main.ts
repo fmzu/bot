@@ -32,6 +32,26 @@ class VoteManager {
   getCurrentVote() {
     return this.currentVote
   }
+
+  getResults() {
+    if (!this.currentVote) return null
+
+    const results: Record<string, number> = {}
+
+    for (const option of this.currentVote.options) {
+      results[option] = 0
+    }
+
+    for (const vote of Object.values(this.currentVote.votes)) {
+      results[vote]++
+    }
+
+    return results
+  }
+
+  endVote() {
+    this.currentVote = null
+  }
 }
 
 const client = new Client({
@@ -84,10 +104,6 @@ client.on(Events.InteractionCreate, async (interaction) => {
 
 const mentionText = `<@${process.env.BOT_ID}>`
 
-// const openai = new OpenAI({
-//   apiKey: process.env.OPENAI_API_TOKEN,
-// })
-
 async function onCreateMessage(message: Message<boolean>) {
   // 自分へのメンションかどうか
   const isMention = message.content.includes(mentionText ?? "")
@@ -112,7 +128,7 @@ async function onCreateMessage(message: Message<boolean>) {
   //       .setValue(""),
   //   )
 
-  if (text.startsWith("!startvote")) {
+  if (text.startsWith("!startVote")) {
     const options = text.split(" ").slice(1) // コマンドの後のテキストを選択肢として分割
     const select = new StringSelectMenuBuilder()
       .setCustomId("starter")
@@ -139,23 +155,24 @@ async function onCreateMessage(message: Message<boolean>) {
     voteManager.startVote(options)
     await message.channel.send({ content: voteMessageText, components: [row] })
   }
+
+  if (text === "!endVote") {
+    const results = voteManager.getResults()
+
+    if (!results) {
+      await message.channel.send({
+        content: `${responseText} 現在投票は行われていません。`,
+      })
+      return
+    }
+
+    let resultsText = `${responseText} 投票結果は以下の通りです。\n`
+    for (const [option, count] of Object.entries(results)) {
+      resultsText += `${option}: ${count}票\n`
+    }
+
+    await message.channel.send({ content: resultsText })
+
+    voteManager.endVote()
+  }
 }
-
-// else {
-//   const response = await openai.chat.completions.create({
-//     model: "gpt-4o",
-//     stream: false,
-//     messages: [
-//       {
-//         role: "system",
-//         content: text,
-//       },
-//     ],
-//   })
-//   console.log("message", response)
-
-// // 応答
-// await message.channel.send(
-//   `${responseText} ${response.choices[0].message.content}`,
-// )
-// }
