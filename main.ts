@@ -34,16 +34,6 @@ class VoteManager {
   }
 }
 
-const select = new StringSelectMenuBuilder()
-  .setCustomId("starter")
-  .setPlaceholder("何か一つ選んでください")
-  .addOptions(
-    new StringSelectMenuOptionBuilder()
-      .setLabel("Bulbasaur")
-      .setDescription("The dual-type Grass/Poison Seed Pokémon.")
-      .setValue("bulbasaur"),
-  )
-
 const client = new Client({
   intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages],
 })
@@ -64,7 +54,7 @@ const voteManager = new VoteManager()
 
 client.on(Events.MessageCreate, onCreateMessage)
 
-const mentionText = process.env.BOT_ID
+const mentionText = `<@${process.env.BOT_ID}>`
 
 // const openai = new OpenAI({
 //   apiKey: process.env.OPENAI_API_TOKEN,
@@ -123,13 +113,6 @@ async function onCreateMessage(message: Message<boolean>) {
 
     voteManager.startVote(options)
     await message.channel.send({ content: voteMessageText, components: [row] })
-  } else if (text.startsWith("!vote")) {
-    const option = text.split(" ")[1]
-    if (voteManager.vote(message.author.id, option)) {
-      await message.channel.send(`あなたの投票を受け付けました: ${option}`)
-    } else {
-      await message.channel.send(`無効な選択肢です: ${option}`)
-    }
   }
 }
 
