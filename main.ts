@@ -54,6 +54,34 @@ const voteManager = new VoteManager()
 
 client.on(Events.MessageCreate, onCreateMessage)
 
+client.on(Events.InteractionCreate, async (interaction) => {
+  if (!interaction.isAnySelectMenu()) return
+
+  const vote = voteManager.getCurrentVote()
+  console.log("vote", vote)
+
+  if (!vote) return
+
+  const userId = interaction.user.id
+  const option = interaction.values[0]
+  console.log("userId", userId)
+  console.log("option", option)
+
+  const success = voteManager.vote(userId, option)
+
+  if (success) {
+    await interaction.reply({
+      content: "投票を受け付けました。",
+      ephemeral: true,
+    })
+  } else {
+    await interaction.reply({
+      content: "選択肢が見つかりません。",
+      ephemeral: true,
+    })
+  }
+})
+
 const mentionText = `<@${process.env.BOT_ID}>`
 
 // const openai = new OpenAI({
@@ -93,10 +121,7 @@ async function onCreateMessage(message: Message<boolean>) {
     // 選択肢を追加
     const selectResult = select.addOptions(
       options.map((option, index) =>
-        new StringSelectMenuOptionBuilder()
-          .setLabel(option)
-          .setDescription(`Option ${index + 1}`)
-          .setValue(option),
+        new StringSelectMenuOptionBuilder().setLabel(option).setValue(option),
       ),
     )
 
