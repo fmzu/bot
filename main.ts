@@ -78,14 +78,11 @@ client.on(Events.InteractionCreate, async (interaction) => {
   if (!interaction.isAnySelectMenu()) return
 
   const vote = voteManager.getCurrentVote()
-  console.log("vote", vote)
 
   if (!vote) return
 
   const userId = interaction.user.id
   const option = interaction.values[0]
-  console.log("userId", userId)
-  console.log("option", option)
 
   const success = voteManager.vote(userId, option)
 
