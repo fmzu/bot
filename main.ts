@@ -166,7 +166,19 @@ async function onCreateMessage(message: Message<boolean>) {
       return
     }
 
-    let resultsText = `${responseText} 投票結果は以下の通りです。\n`
+    let maxVotes = 0
+    let maxOption = ""
+
+    // 最大票数を持つ選択肢を見つける
+    for (const [option, count] of Object.entries(results)) {
+      if (count > maxVotes) {
+        maxVotes = count
+        maxOption = option
+      }
+    }
+
+    // 結果テキストを更新
+    let resultsText = `${responseText} 投票結果は以下の通りです。投票の結果、${maxOption}が選ばれました。(${maxVotes}票)\n`
     for (const [option, count] of Object.entries(results)) {
       resultsText += `${option}: ${count}票\n`
     }
