@@ -82,7 +82,7 @@ describe("VoteManager", () => {
     const success = voteManager.vote("user1", "Option 1")
     expect(success).toBe(false)
   })
-
+  //投票が終わるまでは新しく投票を始められないようにする
   // Test 5: Starting a new vote resets previous votes
   test("starting a new vote resets votes", () => {
     const options1 = ["Option 1", "Option 2"]
