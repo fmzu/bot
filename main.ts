@@ -8,7 +8,7 @@ import {
   type Message,
 } from "discord.js"
 
-class VoteManager {
+export class VoteManager {
   private currentVote: {
     options: string[]
     votes: Record<string, string>
