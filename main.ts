@@ -19,6 +19,12 @@ export class VoteManager {
       options: options,
       votes: {},
     }
+    if (options.length > 25) {
+      throw new Error("エラー: 選択肢は25個以下でなければなりません。")
+    }
+    if (options.some((option) => option.length > 30)) {
+      throw new Error("エラー: 選択肢は30文字以下でなければなりません。")
+    }
   }
 
   vote(userId: string, option: string) {
@@ -108,25 +114,30 @@ async function onCreateMessage(message: Message<boolean>) {
   // 自分へのメンションでない場合は無視する
   if (!isMention) return
 
+  const responseText = `<@${message.author.id}>`
+
   /**
    * メッセージの内容
    */
   const text = message.content.replace(mentionText ?? "", "").trim()
 
-  const responseText = `<@${message.author.id}>`
-
-  // const select = new StringSelectMenuBuilder()
-  //   .setCustomId("starter")
-  //   .setPlaceholder("Make a selection!")
-  //   .addOptions(
-  //     new StringSelectMenuOptionBuilder()
-  //       .setLabel("")
-  //       .setDescription("")
-  //       .setValue(""),
-  //   )
-
   if (text.startsWith("!startVote")) {
-    const options = text.split(" ").slice(1) // コマンドの後のテキストを選択肢として分割
+    const options = text.split(" ").slice(1)
+    if (options.length > 25) {
+      message.channel.send(
+        `${responseText} エラー: 項目は25個以下でなければなりません。`,
+      )
+      return
+    }
+
+    if (options.some((option) => option.length > 30)) {
+      // 30文字以上の選択肢がある場合は無効
+      message.channel.send(
+        `${responseText} エラー: 選択肢は30文字以下でなければなりません。`,
+      )
+      return // 明示的に何も返さないように変更
+    }
+
     const select = new StringSelectMenuBuilder()
       .setCustomId("starter")
       .setPlaceholder("何か一つ選んでください")
