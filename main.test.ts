@@ -126,7 +126,7 @@ test("オプションが30文字以下であれば投票を開始する", () => 
 test("30文字を超える選択肢がある場合にエラーを投げる", async () => {
   const longOption = "ThisIsAVeryLongOptionThatExceedsThirtyCharacters"
   const options = ["Option1", longOption]
-  expect(() => voteManager.startVote(options)).rejects.toThrow(
+  expect(() => voteManager.startVote(options)).toThrow(
     "エラー: 選択肢は30文字以下でなければなりません。",
   )
 })
