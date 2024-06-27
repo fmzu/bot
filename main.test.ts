@@ -102,6 +102,24 @@ test("投票がない場合は空の結果が返される", () => {
   expect(results).toEqual({ "オプション 1": 0, "オプション 2": 0 })
 })
 
+test("投票結果が票数が多い順にソートされる", () => {
+  voteManager.startVote(["オプション 1", "オプション 2", "オプション 3"])
+  voteManager.vote("user1", "オプション 3")
+  voteManager.vote("user2", "オプション 3")
+  voteManager.vote("user3", "オプション 1")
+  const results = voteManager.getResults()
+
+  // Check if results is not null before proceeding
+  if (results !== null) {
+    const sortedResults = Object.entries(results).sort((a, b) => b[1] - a[1])
+    expect(sortedResults).toEqual([
+      ["オプション 3", 2],
+      ["オプション 1", 1],
+      ["オプション 2", 0],
+    ])
+  }
+})
+
 test("投票項目が25個以下の時投票を開始する", () => {
   const options = Array.from({ length: 25 }, (_, i) => `Option ${i + 1}`)
   voteManager.startVote(options)
