@@ -1,5 +1,5 @@
 import type { Message } from "discord.js"
-import { Client, Events, GatewayIntentBits } from "discord.js"
+import { ActionRowBuilder, Client, Events, GatewayIntentBits } from "discord.js"
 
 const {
   StringSelectMenuBuilder,
@@ -55,8 +55,15 @@ async function onCreateMessage(message: Message<boolean>) {
         .setValue("squirtle"),
     )
 
+  const row = new ActionRowBuilder().addComponents(select)
+
+  await interaction.reply({
+    content: "Choose your starter!",
+    components: [row],
+  })
   console.log("select", select)
   message.channel.send({
     content: `${responseText} あああ`,
+    components: [row],
   })
 }
