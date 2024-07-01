@@ -104,6 +104,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
     })
   }
 })
+
 /**
  * botのメンションテキスト
  */
@@ -171,55 +172,53 @@ async function onCreateMessage(message: Message<boolean>) {
         components: [row],
       })
     }
+  }
 
-    if (text === "!endVote") {
-      const results = voteManager.getResults()
+  if (text === "!endVote") {
+    const results = voteManager.getResults()
 
-      if (!results) {
-        await message.channel.send({
-          content: `${responseText} 現在投票は行われていません。`,
-        })
-        return
-      }
-
-      let maxVotes = 0
-      const maxOptions = [] // 最大票数を持つ選択肢を格納する配列
-
-      // 最大票数を持つ選択肢を見つける
-      for (const [option, count] of Object.entries(results)) {
-        if (count > maxVotes) {
-          maxVotes = count
-          maxOptions.length = 0 // 配列をリセット
-          maxOptions.push(option)
-        } else if (count === maxVotes) {
-          maxOptions.push(option) // 最大票数と同じ票数の選択肢を追加
-        }
-      }
-
-      const allVotesZero = Object.values(results).every((count) => count === 0)
-
-      // 結果テキストを更新
-      let resultsText = `${responseText} 投票結果は以下の通りです。 \n`
-
-      if (allVotesZero) {
-        resultsText = "投票が行われましたが、すべての選択肢の票数が0でした。\n"
-      } else {
-        if (maxOptions.length === 1) {
-          resultsText += `投票の結果、${maxOptions[0]}が選ばれました。(${maxVotes}票)\n`
-        } else {
-          resultsText += `投票の結果、${maxOptions.join("と")}が同票で最も多い票を獲得しました。(${maxVotes}票)\n`
-        }
-        const sortedEntries = Object.entries(results).sort(
-          (a, b) => b[1] - a[1],
-        )
-        for (const [option, count] of sortedEntries) {
-          resultsText += `${option}: ${count}票\n`
-        }
-      }
-
-      await message.channel.send({ content: resultsText })
-
-      voteManager.endVote()
+    if (!results) {
+      await message.channel.send({
+        content: `${responseText} 現在投票は行われていません。`,
+      })
+      return
     }
+
+    let maxVotes = 0
+    const maxOptions = [] // 最大票数を持つ選択肢を格納する配列
+
+    // 最大票数を持つ選択肢を見つける
+    for (const [option, count] of Object.entries(results)) {
+      if (count > maxVotes) {
+        maxVotes = count
+        maxOptions.length = 0 // 配列をリセット
+        maxOptions.push(option)
+      } else if (count === maxVotes) {
+        maxOptions.push(option) // 最大票数と同じ票数の選択肢を追加
+      }
+    }
+
+    const allVotesZero = Object.values(results).every((count) => count === 0)
+
+    // 結果テキストを更新
+    let resultsText = `${responseText} 投票結果は以下の通りです。 \n`
+
+    if (allVotesZero) {
+      resultsText = "投票が行われましたが、すべての選択肢の票数が0でした。\n"
+    } else {
+      if (maxOptions.length === 1) {
+        resultsText += `投票の結果、${maxOptions[0]}が選ばれました。(${maxVotes}票)\n`
+      } else {
+        resultsText += `投票の結果、${maxOptions.join("と")}が同票で最も多い票を獲得しました。(${maxVotes}票)\n`
+      }
+      const sortedEntries = Object.entries(results).sort((a, b) => b[1] - a[1])
+      for (const [option, count] of sortedEntries) {
+        resultsText += `${option}: ${count}票\n`
+      }
+    }
+
+    await message.channel.send({ content: resultsText })
+
+    voteManager.endVote()
   }
 }
