@@ -209,9 +209,7 @@ async function onCreateMessage(message: Message<boolean>) {
       components: [row],
     })
 
-    // 投票の時間制限を設定 (例: 5分)
     setTimeout(async () => {
-      // 投票結果を集計するロジック (voteManager.endVoteなど)
       const results = voteManager.getResults()
 
       if (!results) {
@@ -258,9 +256,7 @@ async function onCreateMessage(message: Message<boolean>) {
 
       await message.channel.send({ content: resultsText })
 
-      // 投票終了後に選択肢を無効化するなどの追加処理が必要な場合はここに記述
       const voteCounts = voteManager.getCurrentVoteCount()
-      console.log("aa")
 
       if (!voteCounts) {
         await message.channel.send({
@@ -268,7 +264,7 @@ async function onCreateMessage(message: Message<boolean>) {
         })
         return
       }
-    }, 60000) // 300000ミリ秒 = 5分
+    }, 60000) //一分で投票終了
   }
 
   if (text === "!currentVoteCount") {
